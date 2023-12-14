@@ -1,74 +1,55 @@
 import os
 import sys
-from sqlalchemy import Column, ForeignKey, Integer, String, Table
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
 from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy import create_engine
 from eralchemy2 import render_er
+from datetime import datetime
 
 Base = declarative_base()
 
-class User(Base):
-    __tablename__ = 'users'
+class Usuario(Base):
+    __tablename__ = 'usuario'
     id = Column(Integer, primary_key=True)
-    username = Column(String(250), nullable=False, unique=True)
-    password = Column(String(250), nullable=False)
     email = Column(String(250), nullable=False, unique=True)
-    first_name = Column(String(250), nullable=False)
-    last_name = Column(String(250), nullable=False)
-    favorites = relationship("Favorite", back_populates="user")
+    password = Column(String(250), nullable=False)
+    fecha_subscripcion = Column(DateTime, default=datetime.utcnow)
+    nombre = Column(String(250))
+    apellido = Column(String(250))
 
-class Planet(Base):
-    __tablename__ = 'planets'
+    favoritos = relationship('Favorito', back_populates='usuario')
+
+class Planeta(Base):
+    __tablename__ = 'planeta'
     id = Column(Integer, primary_key=True)
-    name = Column(String(250), nullable=False)
-    description = Column(String(500))
-    characters = relationship("Character", secondary="planet_character_association")
+    nombre = Column(String(250), nullable=False)
+    descripcion = Column(String(500))
+  
+    favoritos = relationship('Favorito', back_populates='planeta')
 
-
-class Character(Base):
-    __tablename__ = 'characters'
+class Personaje(Base):
+    __tablename__ = 'personaje'
     id = Column(Integer, primary_key=True)
-    name = Column(String(250), nullable=False)
-    description = Column(String(500))
-    planets = relationship("Planet", secondary="planet_character_association")
+    nombre = Column(String(250), nullable=False)
+    descripcion = Column(String(500))
 
+    favoritos = relationship('Favorito', back_populates='personaje')
 
-planet_character_association = Table('planet_character_association', Base.metadata,
-    Column('planet_id', Integer, ForeignKey('planets.id')),
-    Column('character_id', Integer, ForeignKey('characters.id'))
-)
-
-
-class Favorite(Base):
-    __tablename__ = 'favorites'
+class Favorito(Base):
+    __tablename__ = 'favorito'
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    planet_id = Column(Integer, ForeignKey('planets.id'))
-    character_id = Column(Integer, ForeignKey('characters.id'))
-    user = relationship(User, back_populates="favorites")
-    planet = relationship(Planet)
-    character = relationship(Character)
+    usuario_id = Column(Integer, ForeignKey('usuario.id'))
+    planeta_id = Column(Integer, ForeignKey('planeta.id'))
+    personaje_id = Column(Integer, ForeignKey('personaje.id'))
 
 
-class Post(Base):
-    __tablename__ = 'posts'
-    id = Column(Integer, primary_key=True)
-    title = Column(String(250), nullable=False)
-    content = Column(String(1000), nullable=False)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    user = relationship(User)
-    comments = relationship("Comment", back_populates="post")
+    usuario = relationship('Usuario', back_populates='favoritos')
 
+    planeta = relationship('Planeta', back_populates='favoritos')
 
-class Comment(Base):
-    __tablename__ = 'comments'
-    id = Column(Integer, primary_key=True)
-    content = Column(String(1000), nullable=False)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    post_id = Column(Integer, ForeignKey('posts.id'))
-    user = relationship(User)
-    post = relationship(Post, back_populates="comments")
+    personaje = relationship('Personaje', back_populates='favoritos')
 
-# Generar el diagrama.png utilizando eralchemy
+# Genera el diagrama.png utilizando el comando `$ python src/models.py`
 render_er(Base, 'diagram.png')
+
 
